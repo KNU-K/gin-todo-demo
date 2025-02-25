@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+        <style>
+            body {
+                font-family: "Arial", sans-serif;
+                background-color: #f4f4f4;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+            .container {
+                background: #ffffff;
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+                width: 400px;
+                text-align: center;
+            }
+            h1 {
+                margin: 0 0 20px;
+                font-size: 28px;
+                color: #333;
+            }
+            .input-container {
+                display: flex;
+                margin-bottom: 20px;
+            }
+            input[type="text"] {
+                flex: 1;
+                padding: 12px;
+                border: 1px solid #ced4da;
+                border-radius: 8px;
+                font-size: 16px;
+                outline: none;
+                transition: border-color 0.3s;
+            }
+            input[type="text"]:focus {
+                border-color: #007bff;
+            }
+            .btn {
+                background-color: #007bff;
+                color: white;
+                padding: 12px 15px;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 16px;
+                margin-left: 10px;
+                transition: background-color 0.3s;
+            }
+            .btn:hover {
+                background-color: #0056b3;
+            }
+            ul {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+                text-align: left;
+            }
+            li {
+                background: #f8f9fa;
+                margin: 10px 0;
+                padding: 12px;
+                border-radius: 8px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                transition: background-color 0.3s;
+            }
+            li:hover {
+                background: #e2e6ea;
+            }
+            .delete-btn {
+                background-color: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 6px 12px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                font-size: 14px;
+            }
+            .delete-btn:hover {
+                background-color: #c82333;
+            }
+            .icon {
+                margin-right: 10px;
+                color: #007bff;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1><i class="fas fa-list icon"></i>Todo List</h1>
+            <div class="input-container">
+                <input type="text" id="todoInput" placeholder="할 일을 입력하세요" />
+                <button class="btn" id="addTodoButton"><i class="fas fa-plus"></i> 쓰기</button>
+            </div>
+            <ul id="todoList">
+                <!-- Dynamic Todo items will be added here -->
+            </ul>
+        </div>
+
+        <script>
+            function fetchTodos() {
+                fetch("http://127.0.0.1:9000/todos/")
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const todoList = document.getElementById("todoList");
+                        todoList.innerHTML = ""; // Clear the list before adding new items
+                        data.forEach((todo) => {
+                            addTodoToDOM(todo);
+                        });
+                    });
+            }
+            function addTodoToDOM(todo) {
+                console.log(todo.ID);
+                const todoList = document.getElementById("todoList");
+                const li = document.createElement("li");
+                li.innerHTML = `
+                <span>${todo.title}</span>
+                <button class="delete-btn" onclick="deleteTodo(${todo.ID})">
+                    <i class="fas fa-trash-alt"></i> 삭제
+                </button>
+            `;
+                todoList.appendChild(li);
+            }
+            document.getElementById("addTodoButton").addEventListener("click", function () {
+                const input = document.getElementById("todoInput");
+                const todoTitle = input.value;
+
+                if (!todoTitle) {
+                    alert("할 일을 입력하세요.");
+                    return;
+                }
+
+                fetch("http://127.0.0.1:9000/todos/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ title: todoTitle }),
+                }).then((response) => {
+                    if (response.ok) {
+                        input.value = ""; // Clear the input field
+                        fetchTodos(); // Refresh the todo list
+                    } else {
+                        alert("할 일을 추가하는 데 문제가 발생했습니다.");
+                    }
+                });
+            });
+
+            function deleteTodo(id) {
+                fetch(`http://127.0.0.1:9000/todos/${id}`, {
+                    method: "DELETE",
+                }).then((response) => {
+                    if (response.ok) {
+                        fetchTodos(); // Refresh the todo list after deletion
+                    } else {
+                        alert("할 일을 삭제하는 데 문제가 발생했습니다.");
+                    }
+                });
+            }
+            fetchTodos();
+        </script>
+    </body>
+</html>
